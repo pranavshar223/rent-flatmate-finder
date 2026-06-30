@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  TENANT
+  ADMIN
+}
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  SHARED
+}
+
+enum FurnishingStatus {
+  FURNISHED
+  SEMI_FURNISHED
+  UNFURNISHED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  phone    String?
+  role     Role    @default(TENANT)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  rooms               Room[]
+  tenantProfile       TenantProfile?
+  messages            Message[]
+  compatibilityScores CompatibilityScore[]
+  interestRequests    InterestRequest[]
+  adminAudits         AdminAudit[]
+}
+
+model Room {
+  id               String           @id @default(uuid())
+  ownerId          String
+  title            String
+  description      String
+  location         String
+  rent             Decimal
+  roomType         RoomType
+  furnishingStatus FurnishingStatus
+  availableFrom    DateTime
+  isFilled         Boolean          @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  owner               User                 @relation(fields: [ownerId], references: [id])
+  images              RoomImage[]
+  compatibilityScores CompatibilityScore[]
+  interestRequests    InterestRequest[]
+}
+
+model RoomImage {
+  id       String @id @default(uuid())
+  roomId   String
+  imageUrl String
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  room Room @relation(fields: [roomId], references: [id])
+}
+
+model TenantProfile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  preferredLocation String
+  minBudget         Decimal
+  maxBudget         Decimal
+  moveInDate        DateTime
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model CompatibilityScore {
+  id          String @id @default(uuid())
+  tenantId    String
+  roomId      String
+  score       Int
+  explanation String
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  tenant User @relation(fields: [tenantId], references: [id])
+  room   Room @relation(fields: [roomId], references: [id])
+}
+
+model InterestRequest {
+  id       String        @id @default(uuid())
+  tenantId String
+  roomId   String
+  status   RequestStatus @default(PENDING)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant User  @relation(fields: [tenantId], references: [id])
+  room   Room  @relation(fields: [roomId], references: [id])
+  chat   Chat?
+}
+
+model Chat {
+  id                String @id @default(uuid())
+  interestRequestId String @unique
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  interestRequest InterestRequest @relation(fields: [interestRequestId], references: [id])
+  messages        Message[]
+}
+
+model Message {
+  id       String @id @default(uuid())
+  chatId   String
+  senderId String
+  message  String
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  chat   Chat @relation(fields: [chatId], references: [id])
+  sender User @relation(fields: [senderId], references: [id])
+}
+
+model AdminAudit {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+}
