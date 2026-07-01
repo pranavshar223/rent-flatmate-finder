@@ -1,0 +1,28 @@
+export let mockInterests = [
+  {
+    id: 'req_1',
+    roomId: 'r1',
+    tenantId: 'tenant1',
+    ownerId: 'owner1',
+    status: 'pending',
+    message: 'Hi! I am very interested in your room.',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tenantName: 'Alex',
+    tenantCompatibility: 92,
+    roomTitle: 'Spacious Master Bedroom',
+  },
+  {
+    id: 'req_2',
+    roomId: 'r3',
+    tenantId: 'tenant1',
+    ownerId: 'owner2',
+    status: 'accepted',
+    message: 'Looks great!',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000).toISOString(),
+    tenantName: 'Alex',
+    tenantCompatibility: 95,
+    roomTitle: 'Luxury Studio in City Center',
+  },
+];
