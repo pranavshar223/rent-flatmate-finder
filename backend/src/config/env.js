@@ -16,4 +16,12 @@ const env = {
   SMTP_PASS: process.env.SMTP_PASS,
 };
 
+// Fail fast on critical environment variables
+const requiredCriticalVars = ['DATABASE_URL', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+requiredCriticalVars.forEach((key) => {
+  if (!env[key]) {
+    throw new Error(`CRITICAL ERROR: ${key} is missing from the environment variables.`);
+  }
+});
+
 module.exports = env;
