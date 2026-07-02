@@ -13,11 +13,10 @@ class ChatController {
   }
 
   static async getChatMessages(req, res) {
-    const { page, limit } = req.query;
-    const result = await ChatService.getChatMessages(req.params.id, req.user.userId, { page, limit });
+    const { cursor, limit } = req.query;
+    const result = await ChatService.getChatMessages(req.params.id, req.user.userId, { cursor, limit });
     return ApiResponse.success(res, 200, 'Messages retrieved.', {
-      currentPage: page,
-      totalPages: Math.ceil(result.totalItems / limit),
+      nextCursor: result.nextCursor,
       totalItems: result.totalItems,
       items: result.items,
     });

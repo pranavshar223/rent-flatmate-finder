@@ -69,13 +69,13 @@ export const ProfileForm = ({ defaultValues, onSubmit, loading }: ProfileFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="budgetMin">Min Budget ($)</Label>
+            <Label htmlFor="budgetMin">Min Budget (₹)</Label>
             <Input id="budgetMin" type="number" {...form.register('budgetMin')} />
             {form.formState.errors.budgetMin && <p className="text-sm text-danger">{form.formState.errors.budgetMin.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="budgetMax">Max Budget ($)</Label>
+            <Label htmlFor="budgetMax">Max Budget (₹)</Label>
             <Input id="budgetMax" type="number" {...form.register('budgetMax')} />
             {form.formState.errors.budgetMax && <p className="text-sm text-danger">{form.formState.errors.budgetMax.message}</p>}
           </div>
@@ -140,3 +140,4 @@ export const ProfileForm = ({ defaultValues, onSubmit, loading }: ProfileFormPro
     </form>
   );
 };
+

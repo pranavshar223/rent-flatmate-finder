@@ -1,22 +1,20 @@
 import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
 
 interface CompatibilityCardProps {
   score: number;
   explanation: string;
-  breakdown: {
-    budget: boolean;
-    location: boolean;
-    moveIn: boolean;
-    roomType: boolean;
+  breakdown?: {
+    budget?: boolean;
+    location?: boolean;
+    moveIn?: boolean;
+    roomType?: boolean;
     lifestyle?: boolean;
     [key: string]: boolean | undefined;
   };
   confidence?: 'Very High' | 'High' | 'Moderate' | 'Low';
-  onInterested?: () => void;
 }
 
-export const CompatibilityCard = ({ score, explanation, breakdown, confidence = 'High', onInterested }: CompatibilityCardProps) => {
+export const CompatibilityCard = ({ score, explanation, breakdown = {}, confidence = 'High' }: CompatibilityCardProps) => {
   // Determine color based on score
   let colorClass = 'text-success border-success';
   let label = 'Excellent Match';
@@ -70,17 +68,8 @@ export const CompatibilityCard = ({ score, explanation, breakdown, confidence = 
           <span className={`text-sm font-bold ${colorClass.split(' ')[0]}`}>{confidence}</span>
         </div>
 
-        <div className="text-center text-primary text-xs tracking-widest mb-6 opacity-50 select-none">
-          ★★★★★★★★★★★★★★★★★★★★
-        </div>
-
-        <Button 
-          onClick={onInterested} 
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-lg"
-        >
-          I'm Interested
-        </Button>
       </CardContent>
     </Card>
   );
 };
+

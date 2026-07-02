@@ -60,12 +60,14 @@ class InterestService {
     const startTime = Date.now();
     const request = await this.getRequestById(id, ownerId, 'OWNER');
     
-    if (request.status !== 'PENDING') {
-      throw new ValidationError(`Cannot accept request in ${request.status} state.`);
-    }
-
     // Database Transaction
     const updatedRequest = await prisma.$transaction(async (tx) => {
+      // Re-fetch inside transaction to ensure we have the latest status lock
+      const currentReq = await tx.interestRequest.findUnique({ where: { id } });
+      if (!currentReq || currentReq.status !== 'PENDING') {
+        throw new ValidationError(`Cannot accept request. It is no longer in PENDING state.`);
+      }
+
       return InterestRepository.updateStatus(id, 'ACCEPTED', tx);
     });
 
@@ -85,11 +87,11 @@ class InterestService {
     const startTime = Date.now();
     const request = await this.getRequestById(id, ownerId, 'OWNER');
 
-    if (request.status !== 'PENDING') {
-      throw new ValidationError(`Cannot reject request in ${request.status} state.`);
-    }
-
     const updatedRequest = await prisma.$transaction(async (tx) => {
+      const currentReq = await tx.interestRequest.findUnique({ where: { id } });
+      if (!currentReq || currentReq.status !== 'PENDING') {
+        throw new ValidationError(`Cannot reject request. It is no longer in PENDING state.`);
+      }
       return InterestRepository.updateStatus(id, 'REJECTED', tx);
     });
 
@@ -115,6 +117,14 @@ class InterestService {
 
     await InterestRepository.softDeleteInterest(id);
     console.info(`[INFO] Interest Cancelled: Request ${id} | Tenant ${tenantId} | Duration ${Date.now() - startTime}ms`);
+    
+    eventEmitter.emit(EVENTS.INTEREST_CANCELLED, {
+      interestId: id,
+      tenantId: request.tenantId,
+      roomId: request.roomId,
+      ownerId: request.room.ownerId,
+      timestamp: new Date().toISOString()
+    });
 
     return true;
   }

@@ -38,7 +38,10 @@ class TenantRepository {
     };
 
     if (location) {
-      where.location = { contains: location, mode: 'insensitive' };
+      where.OR = [
+        { location: { contains: location, mode: 'insensitive' } },
+        { title: { contains: location, mode: 'insensitive' } },
+      ];
     }
     if (minBudget !== undefined) {
       where.rent = { ...where.rent, gte: minBudget };

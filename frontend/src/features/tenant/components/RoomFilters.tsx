@@ -2,7 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Label } from '../../../components/ui/label';
 import { Input } from '../../../components/ui/input';
 
-export const RoomFilters = () => {
+interface RoomFiltersProps {
+  onChange?: (filters: any) => void;
+}
+
+export const RoomFilters = ({ onChange }: RoomFiltersProps) => {
+  // Suppress TS unused warning for now since full filter logic is mocked
+  void onChange;
   return (
     <Card className="border-border sticky top-4">
       <CardHeader className="pb-3 border-b border-border">
@@ -29,7 +35,7 @@ export const RoomFilters = () => {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-muted-foreground font-semibold uppercase text-xs tracking-wider">Price Range ($)</Label>
+          <Label className="text-muted-foreground font-semibold uppercase text-xs tracking-wider">Price Range (₹)</Label>
           <div className="flex items-center gap-2 pt-1">
             <Input placeholder="Min" type="number" className="h-8" />
             <span className="text-muted-foreground">-</span>
@@ -50,3 +56,4 @@ export const RoomFilters = () => {
     </Card>
   );
 };
+

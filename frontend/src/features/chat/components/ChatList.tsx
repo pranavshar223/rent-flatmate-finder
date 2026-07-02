@@ -1,11 +1,14 @@
+import { UserAvatar } from '../../../components/ui/UserAvatar';
+
 interface ChatListProps {
   chats: any[];
   activeChatId?: string;
   onSelectChat: (chatId: string) => void;
   currentUserId: string;
+  isUserOnline?: (userId: string) => boolean;
 }
 
-export const ChatList = ({ chats, activeChatId, onSelectChat, currentUserId }: ChatListProps) => {
+export const ChatList = ({ chats, activeChatId, onSelectChat, currentUserId, isUserOnline }: ChatListProps) => {
   if (chats.length === 0) {
     return <div className="p-8 text-center text-muted-foreground text-sm">No conversations yet.</div>;
   }
@@ -15,6 +18,7 @@ export const ChatList = ({ chats, activeChatId, onSelectChat, currentUserId }: C
       {chats.map(chat => {
         const isTenant = currentUserId === chat.tenantId;
         const displayName = isTenant ? chat.ownerName : chat.tenantName;
+        const avatarUrl = isTenant ? chat.ownerAvatarUrl : chat.tenantAvatarUrl;
         const unreadCount = isTenant ? chat.unreadCountTenant : chat.unreadCountOwner;
         const isActive = activeChatId === chat.id;
 
@@ -28,10 +32,15 @@ export const ChatList = ({ chats, activeChatId, onSelectChat, currentUserId }: C
                 : 'border-transparent hover:bg-muted/30'
             }`}
           >
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary shrink-0 relative">
-              {displayName.charAt(0)}
+            <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative overflow-visible">
+              <div className="w-full h-full rounded-full overflow-hidden">
+                <UserAvatar avatarUrl={avatarUrl} name={displayName} className="w-full h-full text-lg" />
+              </div>
+              {isUserOnline && isUserOnline(isTenant ? chat.ownerId : chat.tenantId) && (
+                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-card z-10" />
+              )}
               {unreadCount > 0 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground border-2 border-card">
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground border-2 border-card z-10">
                   {unreadCount}
                 </div>
               )}

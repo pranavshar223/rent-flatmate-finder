@@ -57,11 +57,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'role-selection',
-        element: (
-          <ProtectedRoute>
-            <RoleSelectionPage />
-          </ProtectedRoute>
-        )
+        element: <RoleSelectionPage />
       }
     ]
   },

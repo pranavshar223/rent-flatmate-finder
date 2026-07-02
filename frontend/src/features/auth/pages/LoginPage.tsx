@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../api/supabase';
 import { AuthApi } from '../../../api/auth.api';
@@ -9,33 +9,45 @@ export const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { setAuthData } = useAuth();
+  const hasAttemptedLogin = useRef(false);
 
   useEffect(() => {
-    // Listen for OAuth callback from Supabase
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setIsLoading(true);
-        try {
-          // Pass email and Supabase access_token to backend
-          const response = await AuthApi.login(session.user.email!, session.access_token);
-
-          // Backend returns 202 if the user needs to register (select role)
-          if (response.message === 'ROLE_REQUIRED') {
-            toast('Please select a role to complete registration.');
-            navigate('/role-selection');
-          } else {
-            // Success 200
-            setAuthData(response.data.user, response.data.token);
-            toast.success('Logged in successfully!');
-            navigate(`/${response.data.user.role.toLowerCase()}/dashboard`);
-          }
-        } catch (error) {
-          console.error('Backend authentication failed:', error);
-          toast.error('Authentication failed. Please try again.');
-          await supabase.auth.signOut();
-        } finally {
-          setIsLoading(false);
+    const handleBackendLogin = async (session: any) => {
+      if (hasAttemptedLogin.current) return;
+      hasAttemptedLogin.current = true;
+      
+      setIsLoading(true);
+      try {
+        const response = await AuthApi.login(session.user.email!, session.access_token);
+        if (response.message === 'ROLE_REQUIRED') {
+          toast('Please select a role to complete registration.');
+          navigate('/role-selection');
+        } else {
+          setAuthData(response.data.user, response.data.token);
+          toast.success('Logged in successfully!');
+          navigate(`/${response.data.user.role.toLowerCase()}/dashboard`);
         }
+      } catch (error) {
+        console.error('Backend authentication failed:', error);
+        toast.error('Authentication failed. Please try again.');
+        await supabase.auth.signOut();
+        hasAttemptedLogin.current = false;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Check initial session immediately in case we just redirected back
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        handleBackendLogin(session);
+      }
+    });
+
+    // Listen for OAuth callback or state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        handleBackendLogin(session);
       }
     });
 
@@ -79,6 +91,10 @@ export const LoginPage = () => {
         </svg>
         {isLoading ? 'Connecting...' : 'Continue with Google'}
       </button>
+
+      <p className="text-sm text-muted-foreground mb-4 font-medium">
+        (You'll be able to choose if you are an Owner or Tenant in the next step!)
+      </p>
 
       <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
         By continuing, you agree to our <br/>

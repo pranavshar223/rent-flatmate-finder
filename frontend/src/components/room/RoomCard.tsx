@@ -1,4 +1,4 @@
-import { Card, CardContent, CardFooter } from '../ui/card';
+﻿import { Card, CardContent, CardFooter } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
@@ -71,11 +71,12 @@ export const RoomCard = ({
       </CardContent>
       
       <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div className="font-bold text-lg">
-          ${price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+        <div className="font-bold text-lg">₹{price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => onClick?.(id)}>View Details</Button>
       </CardFooter>
     </Card>
   );
 };
+
+

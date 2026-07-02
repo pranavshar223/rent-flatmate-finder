@@ -11,8 +11,11 @@ class AuthService {
    */
   static async verifySupabaseUser(token) {
     const { data, error } = await supabase.auth.getUser(token);
+    if (error) {
+      console.error('Supabase getUser error:', error);
+    }
     if (error || !data.user) {
-      throw new AuthenticationError('Invalid or expired authentication token.');
+      throw new AuthenticationError(`Invalid or expired authentication token: ${error?.message || 'No user data'}`);
     }
     return data.user;
   }
@@ -33,12 +36,20 @@ class AuthService {
       throw new AuthenticationError('Token email does not match provided email.');
     }
 
+    // Extract avatarUrl if available from Google
+    const avatarUrl = supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
+
     // 2. Check if user exists in DB
-    const user = await UserRepository.findByEmail(email);
+    let user = await UserRepository.findByEmail(email);
 
     // 3. If no user, prompt for role selection
     if (!user) {
       return { needsRegistration: true, user: null, token: null };
+    }
+
+    // Update avatarUrl if it has changed
+    if (avatarUrl && user.avatarUrl !== avatarUrl) {
+      user = await UserRepository.update(user.id, { avatarUrl });
     }
 
     // 4. Generate custom JWT
@@ -55,6 +66,8 @@ class AuthService {
       throw new AuthenticationError('Token email does not match provided email.');
     }
 
+    const avatarUrl = supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
+
     // 2. Check if already registered
     const existingUser = await UserRepository.findByEmail(email);
     if (existingUser) {
@@ -70,6 +83,7 @@ class AuthService {
       name,
       role,
       phone,
+      avatarUrl,
       password: hashedPassword,
     });
 

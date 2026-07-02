@@ -1,36 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { ProfileForm } from '../components/ProfileForm';
-import { TenantService } from '../../../mocks/tenant.service';
+import { tenantApi } from '../../../api/tenant.api';
+import { mapProfileToBackend } from '../../../mappers/tenant.mapper';
+import { queryKeys } from '../../../constants/queryKeys';
 import { toast } from 'sonner';
 
 export const ProfilePage = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    TenantService.getProfile()
-      .then(res => setProfile(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: profileResponse, isLoading, error } = useQuery({
+    queryKey: queryKeys.profile,
+    queryFn: tenantApi.getProfile,
+    retry: false, // Don't retry on 404
+  });
 
-  const handleSubmit = async (data: any) => {
-    setSaving(true);
-    try {
-      const res = await TenantService.updateProfile(data);
-      if (res.success) {
-        toast.success("Profile updated successfully!");
-      }
-    } catch (error) {
-      toast.error("Failed to update profile");
-    } finally {
-      setSaving(false);
+  // Check if the error is specifically a 404 Not Found (meaning profile doesn't exist yet)
+  const isNotFound = error && (error as any).response?.status === 404;
+  const isHardError = error && !isNotFound;
+  const hasProfile = !!profileResponse?.data;
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => {
+      const backendData = mapProfileToBackend(data);
+      return hasProfile 
+        ? tenantApi.updateProfile(backendData)
+        : tenantApi.createProfile(backendData);
+    },
+    onSuccess: () => {
+      toast.success(`Profile ${hasProfile ? 'updated' : 'created'} successfully!`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile });
+    },
+    onError: (err) => {
+      console.error(err);
+      toast.error(`Failed to ${hasProfile ? 'update' : 'create'} profile`);
     }
-  };
+  });
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
+  if (isHardError) return <div className="p-8 text-center text-danger">Failed to load profile. Please try again later.</div>;
+
+  const profile = profileResponse?.data;
+
+  // We map the backend data back to the format the form expects
+  const defaultValues = profile ? {
+    ...profile,
+    budgetMin: profile.minBudget,
+    budgetMax: profile.maxBudget,
+    preferredLocations: profile.preferredLocation ? [profile.preferredLocation] : [],
+  } : null;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -38,7 +56,12 @@ export const ProfilePage = () => {
         title="My Profile" 
         subtitle="Update your preferences to improve your AI Compatibility Matches."
       />
-      <ProfileForm defaultValues={profile} onSubmit={handleSubmit} loading={saving} />
+      <ProfileForm 
+        defaultValues={defaultValues} 
+        onSubmit={(data) => mutation.mutate(data)} 
+        loading={mutation.isPending} 
+      />
     </div>
   );
 };
+

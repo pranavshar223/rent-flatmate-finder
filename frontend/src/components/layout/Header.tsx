@@ -1,8 +1,13 @@
+import { useAuth } from '../../contexts/AuthContext';
+import { UserAvatar } from '../ui/UserAvatar';
+
 interface HeaderProps {
   onMenuToggle: () => void;
 }
 
 export const Header = ({ onMenuToggle }: HeaderProps) => {
+  const { user } = useAuth();
+  
   return (
     <header className="bg-card border-b border-border h-16 flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm">
       <div className="flex items-center gap-4">
@@ -36,8 +41,8 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-card"></span>
         </button>
 
-        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/30 cursor-pointer">
-          U
+        <div className="h-8 w-8 rounded-full overflow-hidden border border-primary/30 cursor-pointer shrink-0">
+          <UserAvatar avatarUrl={(user as any)?.avatarUrl} name={user?.name || 'U'} className="w-full h-full" />
         </div>
       </div>
     </header>

@@ -1,4 +1,11 @@
-export const MessageBubble = ({ content, timestamp, isOwn, status }: { content: string, timestamp: string, isOwn: boolean, status?: string }) => {
+export interface MessageBubbleProps {
+  content: string;
+  timestamp: string;
+  isOwn: boolean;
+  status?: string;
+}
+
+export const MessageBubble = ({ content, timestamp, isOwn, status }: MessageBubbleProps) => {
   const time = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
@@ -11,12 +18,12 @@ export const MessageBubble = ({ content, timestamp, isOwn, status }: { content: 
         
         <div className="flex items-center justify-end gap-1 mt-1">
           <span className={`text-[10px] ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{time}</span>
-          {isOwn && status && (
+          {isOwn && (
             <span className="text-[10px] opacity-80">
-              {status === 'sending' && '🕒'}
-              {status === 'sent' && '✓'}
-              {status === 'delivered' && '✓✓'}
-              {status === 'read' && <span className="text-blue-300">✓✓</span>}
+              {status === 'SENDING' && '🕒'}
+              {status === 'SENT' && '✓'}
+              {status === 'DELIVERED' && '✓✓'}
+              {status === 'SEEN' && <span className="text-blue-300">✓✓</span>}
             </span>
           )}
         </div>

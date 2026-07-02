@@ -18,12 +18,14 @@ class TenantController {
   }
 
   static async browseRooms(req, res) {
-    const { page, limit, sort, ...filters } = req.query;
+    const { sort, page: rawPage, limit: rawLimit, ...filters } = req.query;
+    const page = parseInt(rawPage, 10) || 1;
+    const limit = parseInt(rawLimit, 10) || 10;
     
     const result = await TenantService.getAvailableRooms(
       req.user.userId, 
       filters, 
-      { page, limit, sort }
+      { page: Number(page), limit: Number(limit), sort }
     );
 
     return ApiResponse.success(res, 200, 'Rooms retrieved successfully', result);

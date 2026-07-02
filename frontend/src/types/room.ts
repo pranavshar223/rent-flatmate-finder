@@ -10,6 +10,8 @@ export interface Room {
   amenities: string[];
   rules: string[];
   status: 'available' | 'rented' | 'inactive';
+  isFilled?: boolean;
+  rent?: number;
   availableFrom: string;
   capacity: number;
   createdAt: string;

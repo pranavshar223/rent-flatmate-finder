@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
 const env = require('../../config/env');
 const ChatService = require('./chat.service');
-
-const onlineUsers = new Map(); // Map<userId, Set<socketId>>
+const UserRepository = require('../../repositories/user.repository');
 
 const setupChatSocket = (io) => {
   // Socket.IO Authentication Middleware
@@ -23,11 +22,11 @@ const setupChatSocket = (io) => {
     const userId = socket.user.userId;
     console.info(`[SOCKET] Connected: Socket ${socket.id} | User ${userId}`);
 
-    // Track online user presence
-    if (!onlineUsers.has(userId)) {
-      onlineUsers.set(userId, new Set());
-    }
-    onlineUsers.get(userId).add(socket.id);
+    // Join a room specifically for this user to allow direct messaging
+    socket.join(userId);
+
+    // Broadcast online status
+    socket.broadcast.emit('chat:online', { userId, timestamp: new Date().toISOString() });
 
     // JOIN CHAT
     socket.on('chat:join', async ({ chatId }) => {
@@ -49,45 +48,62 @@ const setupChatSocket = (io) => {
 
     // SEND MESSAGE
     socket.on('chat:message', async (data) => {
-      const { chatId, content } = data;
+      const { chatId, content, tempId } = data;
       const startTime = Date.now();
 
       try {
-        // Must save to Database first!
+        // Save to DB initially as SENT
         const savedMessage = await ChatService.saveMessage(chatId, userId, content);
         
         // Broadcast to all other sockets in the chat room
-        socket.to(chatId).emit('chat:newMessage', savedMessage);
+        socket.to(chatId).emit('chat:message', savedMessage);
         
-        // Confirm delivery back to sender
-        socket.emit('chat:messageDelivered', savedMessage);
+        // Confirm delivery back to sender with tempId for mapping
+        socket.emit('chat:delivered', { ...savedMessage, tempId });
         
         console.info(`[SOCKET LOG] Message Broadcasted | Chat ${chatId} | Latency ${Date.now() - startTime}ms`);
       } catch (error) {
-        socket.emit('chat:error', { message: error.message });
+        socket.emit('chat:error', { message: error.message, errorType: 'MESSAGE_SEND_FAILED' });
+      }
+    });
+
+    // BATCH READ RECEIPTS
+    socket.on('message:read', async ({ chatId }) => {
+      try {
+        // Update all unread messages in this chat from the other person
+        await ChatService.markMessagesAsRead(chatId, userId);
+        
+        // Broadcast that messages have been read
+        socket.to(chatId).emit('chat:read', { chatId, readBy: userId, timestamp: new Date().toISOString() });
+      } catch (error) {
+        console.error(`[SOCKET] Error marking messages as read:`, error);
       }
     });
 
     // TYPING INDICATORS
-    socket.on('chat:typing', ({ chatId }) => {
+    socket.on('typing:start', ({ chatId }) => {
       socket.to(chatId).emit('chat:typing', { userId, chatId });
     });
 
-    socket.on('chat:stopTyping', ({ chatId }) => {
-      socket.to(chatId).emit('chat:stopTyping', { userId, chatId });
+    socket.on('typing:stop', ({ chatId }) => {
+      socket.to(chatId).emit('chat:stop_typing', { userId, chatId });
     });
 
     // DISCONNECT
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.info(`[SOCKET] Disconnected: Socket ${socket.id} | User ${userId}`);
-      if (onlineUsers.has(userId)) {
-        onlineUsers.get(userId).delete(socket.id);
-        if (onlineUsers.get(userId).size === 0) {
-          onlineUsers.delete(userId);
-        }
+      
+      // Update last seen
+      try {
+        await UserRepository.updateLastSeen(userId);
+      } catch (e) {
+        console.error('Failed to update last seen', e);
       }
+      
+      // Broadcast offline status
+      socket.broadcast.emit('chat:offline', { userId, lastSeenAt: new Date().toISOString() });
     });
   });
 };
 
-module.exports = { setupChatSocket, onlineUsers };
+module.exports = { setupChatSocket };

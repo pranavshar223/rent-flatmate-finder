@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { MenuItem } from './Sidebar';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { useInterestRealtimeUpdates } from '../../hooks/useInterestRealtimeUpdates';
 
 interface DashboardLayoutProps {
   sidebarMenuItems: MenuItem[];
@@ -10,6 +11,9 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ sidebarMenuItems, children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Initialize realtime updates for the dashboard
+  useInterestRealtimeUpdates();
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">

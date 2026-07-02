@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../api/supabase';
+import { socketManager } from '../services/socket/SocketManager';
 
 interface User {
   id: string;
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setToken(storedToken);
           setUser(storedUser);
           setRole(storedUser.role.toLowerCase() as Role);
+          socketManager.connect();
         }
       } catch (error) {
         console.error('Failed to parse auth data from local storage', error);
@@ -48,6 +50,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkSession();
+
+    const handleFatalError = () => {
+      console.error('[AuthContext] Caught auth:fatal_error, logging out.');
+      // Direct logout logic without component state updates if we're already unmounting, 
+      // but since it's global, we just call the local logout state.
+      supabase.auth.signOut();
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('user');
+      socketManager.disconnect();
+      setUser(null);
+      setRole(null);
+      setToken(null);
+      window.location.href = '/login';
+    };
+
+    window.addEventListener('auth:fatal_error', handleFatalError);
+
+    return () => {
+      window.removeEventListener('auth:fatal_error', handleFatalError);
+    };
   }, []);
 
   const setAuthData = (newUser: User, newToken: string) => {
@@ -56,6 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setToken(newToken);
     setUser(newUser);
     setRole(newUser.role.toLowerCase() as Role);
+    socketManager.connect();
   };
 
   const logout = async () => {
@@ -64,6 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await supabase.auth.signOut();
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('user');
+      socketManager.disconnect();
       setUser(null);
       setRole(null);
       setToken(null);

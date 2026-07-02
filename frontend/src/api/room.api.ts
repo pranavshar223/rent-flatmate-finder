@@ -1,4 +1,4 @@
-import { api } from './axios';
+import { axiosInstance as api } from './axios';
 import type { Room } from '../types/room';
 
 export const roomApi = {

@@ -35,10 +35,10 @@ class RoomRepository {
     });
   }
 
-  static async markAsFilled(id) {
+  static async toggleStatus(id, isFilled) {
     return prisma.room.update({
       where: { id },
-      data: { isFilled: true },
+      data: { isFilled },
       include: { images: true },
     });
   }

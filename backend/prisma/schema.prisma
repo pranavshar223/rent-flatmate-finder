@@ -32,13 +32,21 @@ enum RequestStatus {
   REJECTED
 }
 
+enum MessageStatus {
+  SENT
+  DELIVERED
+  SEEN
+}
+
 model User {
   id       String  @id @default(uuid())
   name     String
   email    String  @unique
   password String
   phone    String?
+  avatarUrl String?
   role     Role    @default(TENANT)
+  lastSeenAt DateTime?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -145,6 +153,7 @@ model Message {
   chatId   String
   senderId String
   message  String
+  status   MessageStatus @default(SENT)
 
   createdAt DateTime  @default(now())
   deletedAt DateTime?

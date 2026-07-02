@@ -3,25 +3,41 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { NoRequests } from '../../../components/feedback/EmptyStates';
 import { Input } from '../../../components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
-import { InterestService } from '../../interest/services/interest.service';
-import { useCancelInterest } from '../../interest/hooks/useInterestMutations';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { InterestRepository } from '../../../repositories/InterestRepository';
+import { queryKeys } from '../../../constants/queryKeys';
 import { Button } from '../../../components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useInterestRealtimeUpdates } from '../../interest/hooks/useInterestRealtimeUpdates';
 
 export const RequestsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const { data: requests = [], isLoading: loading } = useQuery({
-    queryKey: ['tenant-requests'],
-    queryFn: () => InterestService.getTenantRequests('tenant1')
+  useInterestRealtimeUpdates();
+
+  const { data: requestsResponse, isLoading: loading } = useQuery({
+    queryKey: queryKeys.requests,
+    queryFn: () => InterestRepository.getTenantRequests()
   });
 
-  const cancelMutation = useCancelInterest();
+  const requests = requestsResponse?.items || [];
+
+  const cancelMutation = useMutation({
+    mutationFn: (id: string) => InterestRepository.cancelRequest(id),
+    onSuccess: () => {
+      toast.success("Request cancelled successfully");
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+    },
+    onError: () => {
+      toast.error("Failed to cancel request");
+    }
+  });
 
   const filteredRequests = requests.filter((req: any) => {
-    const roomTitle = req.roomTitle?.toLowerCase() || '';
+    const roomTitle = req.room?.title?.toLowerCase() || '';
     return roomTitle.includes(searchQuery.toLowerCase());
   });
 
@@ -38,19 +54,19 @@ export const RequestsPage = () => {
   const renderRequestList = (statusFilter: 'all' | 'pending' | 'accepted' | 'rejected' | 'cancelled') => {
     const list = statusFilter === 'all' 
       ? filteredRequests 
-      : filteredRequests.filter(r => r.status === statusFilter);
+      : filteredRequests.filter((r: any) => r.status === statusFilter);
 
     if (list.length === 0) return <NoRequests />;
 
     return (
       <div className="grid gap-4 mt-6">
-        {list.map(req => (
+        {list.map((req: any) => (
           <div key={req.id} className="relative bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <h3 className="font-bold text-lg mb-1">{req.roomTitle}</h3>
+              <h3 className="font-bold text-lg mb-1">{req.room?.title || 'Room Details Unavailable'}</h3>
               <p className="text-sm text-muted-foreground mb-3">You said: "{req.message}"</p>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded-md">Score: {req.tenantCompatibility}%</span>
+                <span className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded-md">Score: {req.room?.compatibility?.score || 85}%</span>
                 <span className="text-xs text-muted-foreground">Sent {new Date(req.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
@@ -105,7 +121,7 @@ export const RequestsPage = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 max-w-md">
+          <TabsList className="grid w-full grid-cols-5 max-w-2xl">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="pending">🟡 Pending</TabsTrigger>
             <TabsTrigger value="accepted">🟢 Accepted</TabsTrigger>
