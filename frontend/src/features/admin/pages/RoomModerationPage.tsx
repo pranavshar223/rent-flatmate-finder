@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useAdminRooms } from '../hooks/useAdminQueries';
 import { useHideRoom, useRestoreRoom } from '../hooks/useAdminMutations';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -56,7 +56,7 @@ export const RoomModerationPage = () => {
                     </td>
                     <td className="px-4 py-3 font-medium">{room.title}</td>
                     <td className="px-4 py-3">{room.location}</td>
-                    <td className="px-4 py-3">${room.rentAmount}</td>
+                    <td className="px-4 py-3">₹{room.rentAmount}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         room.status === 'available' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
@@ -103,3 +103,5 @@ export const RoomModerationPage = () => {
     </div>
   );
 };
+
+

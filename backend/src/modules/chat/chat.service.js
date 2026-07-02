@@ -11,7 +11,18 @@ class ChatService {
     const chat = await ChatRepository.createChat(interestId);
     console.info(`[INFO] Chat Created: ID ${chat.id} from Interest ${interestId}`);
     
-    eventEmitter.emit(EVENTS.CHAT_CREATED, { chatId: chat.id, interestId, timestamp: new Date().toISOString() });
+    // We need tenantId and ownerId to notify users
+    const fullChat = await ChatRepository.findChatById(chat.id);
+    const tenantId = fullChat.interestRequest.tenantId;
+    const ownerId = fullChat.interestRequest.room.ownerId;
+    
+    eventEmitter.emit(EVENTS.CHAT_CREATED, { 
+      chatId: chat.id, 
+      interestId, 
+      tenantId,
+      ownerId,
+      timestamp: new Date().toISOString() 
+    });
     return chat;
   }
 
@@ -56,6 +67,16 @@ class ChatService {
     const savedMsg = await ChatRepository.createMessage(chatId, senderId, content);
     console.info(`[INFO] Message Saved: Chat ${chatId} | Sender ${senderId}`);
     return savedMsg;
+  }
+
+  static async markMessagesAsRead(chatId, userId) {
+    await this.getChatDetails(chatId, userId); // Authorize
+    return ChatRepository.markMessagesAsRead(chatId, userId);
+  }
+
+  static async markMessagesAsDelivered(chatId, userId) {
+    await this.getChatDetails(chatId, userId); // Authorize
+    return ChatRepository.markMessagesAsDelivered(chatId, userId);
   }
 }
 

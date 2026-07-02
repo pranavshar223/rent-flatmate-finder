@@ -1,63 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueries } from '@tanstack/react-query';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { DashboardStatCard } from '../../../components/dashboard/DashboardStatCard';
 import { TenantQuickActions } from '../components/TenantQuickActions';
 import { RecommendedRooms } from '../components/RecommendedRooms';
-import { TenantService } from '../../../mocks/tenant.service';
 import { InterestCard } from '../../../components/interest/InterestCard';
-import { useNavigate } from 'react-router-dom';
+import { tenantApi } from '../../../api/tenant.api';
+import { InterestRepository } from '../../../repositories/InterestRepository';
+import { useInterestRealtimeUpdates } from '../../interest/hooks/useInterestRealtimeUpdates';
+import { queryKeys } from '../../../constants/queryKeys';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<any>(null);
-  const [recommendedRooms, setRecommendedRooms] = useState<any[]>([]);
-  const [recentRequests, setRecentRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  useInterestRealtimeUpdates();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsRes, recRes, reqsRes] = await Promise.all([
-          TenantService.getDashboardStats(),
-          TenantService.getRecommendedRooms(),
-          TenantService.getRequests(),
-        ]);
-        setStats(statsRes.data);
-        setRecommendedRooms(recRes.data);
-        setRecentRequests(reqsRes.data.slice(0, 3));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: queryKeys.profile,
+        queryFn: () => tenantApi.getProfile()
+      },
+      {
+        queryKey: queryKeys.requests,
+        queryFn: () => InterestRepository.getTenantRequests()
+      },
+      {
+        queryKey: [...queryKeys.rooms, 'recommendations'],
+        // Fetch a default list to use as recommendations
+        queryFn: () => tenantApi.browseRooms({ limit: 4 })
       }
-    };
-    fetchData();
-  }, []);
+    ]
+  });
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+  const [profileQuery, requestsQuery, roomsQuery] = results;
+
+  const isLoading = profileQuery.isLoading || requestsQuery.isLoading || roomsQuery.isLoading;
+
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+
+  const profile = profileQuery.data?.data;
+  const requests = requestsQuery.data?.items || [];
+  const availableRooms = roomsQuery.data?.data?.items || [];
+  const recommendedRooms = availableRooms.slice(0, 3);
+  
+  const pendingRequests = requests.filter((r: any) => r.status === 'pending').length;
+  const acceptedRequests = requests.filter((r: any) => r.status === 'accepted').length;
 
   return (
     <div className="space-y-10">
       {/* 1. Welcome Section */}
       <PageHeader 
-        title="Welcome back, Alex 👋" 
+        title={`Welcome back, ${profile?.firstName || 'Tenant'}`} 
         subtitle="Let's find your perfect flatmate and room." 
       />
+
+      {/* Profile Completion Warning */}
+      {!profile?.preferredLocation && (
+        <div className="p-4 bg-warning/10 border border-warning/20 rounded-xl text-warning">
+          <strong>Profile Incomplete:</strong> Please complete your profile to get AI-powered compatibility scores! 
+          <button onClick={() => navigate('/tenant/profile')} className="ml-4 underline font-bold">Complete Profile</button>
+        </div>
+      )}
 
       {/* 2. Today's Best Match Highlight */}
       {recommendedRooms.length > 0 && (
         <div className="bg-gradient-to-r from-primary/10 via-success/10 to-transparent p-[1px] rounded-2xl">
           <div className="bg-card rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-primary/20 shadow-sm relative overflow-hidden">
-            <div className="absolute -right-20 -top-20 text-[200px] opacity-5 select-none pointer-events-none">✨</div>
             
             <div className="space-y-4 max-w-xl relative z-10">
               <span className="text-primary font-bold tracking-widest text-xs uppercase">Today's Best Match</span>
               <h2 className="text-3xl font-extrabold">{recommendedRooms[0].title}</h2>
               <p className="text-muted-foreground">{recommendedRooms[0].location}</p>
               <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-primary">${recommendedRooms[0].price}</span>
+                <span className="text-2xl font-bold text-primary">₹{recommendedRooms[0].price || (recommendedRooms[0] as any).rent}</span>
                 <span className="px-3 py-1 bg-success/20 text-success rounded-full font-bold text-sm">
-                  {recommendedRooms[0].compatibility.score}% Match
+                  {(recommendedRooms[0] as any).compatibility?.score || 85}% Match
                 </span>
               </div>
             </div>
@@ -86,17 +103,21 @@ export const DashboardPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-xl font-bold text-foreground">Recent Requests</h2>
-          {recentRequests.length === 0 ? (
-            <div className="p-8 text-center border border-border rounded-xl bg-card text-muted-foreground">No recent requests</div>
+          {requests.length === 0 ? (
+            <div className="p-8 text-center border border-dashed border-border rounded-xl bg-card text-muted-foreground">
+              <h3 className="text-lg font-bold mb-2">No requests yet</h3>
+              <p>Browse rooms to find your perfect match.</p>
+              <button onClick={() => navigate('/tenant/rooms')} className="mt-4 px-4 py-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20">Browse Rooms</button>
+            </div>
           ) : (
             <div className="space-y-4">
-              {recentRequests.map((req) => (
+              {requests.slice(0, 3).map((req: any) => (
                 <InterestCard 
                   key={req.id}
                   tenantName={req.room?.title || 'Unknown Room'}
                   matchScore={req.room?.compatibility?.score || 0}
                   status={req.status}
-                  message={`Sent to owner for ${req.room?.location}`}
+                  message={`Sent to owner for ${req.room?.location || 'a room'}`}
                 />
               ))}
             </div>
@@ -106,9 +127,8 @@ export const DashboardPage = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-foreground">Overview</h2>
           <div className="grid grid-cols-1 gap-4">
-            <DashboardStatCard title="AI Compatibility Avg" value={`${stats?.compatibilityAverage || 0}%`} icon={<span className="text-xl">✨</span>} color="text-primary" />
-            <DashboardStatCard title="Pending Requests" value={stats?.pendingRequests || 0} icon={<span className="text-xl">⏳</span>} color="text-warning" />
-            <DashboardStatCard title="Accepted Requests" value={stats?.acceptedRequests || 0} icon={<span className="text-xl">✅</span>} color="text-success" />
+            <DashboardStatCard title="Pending Requests" value={pendingRequests} color="text-warning" />
+            <DashboardStatCard title="Accepted Requests" value={acceptedRequests} color="text-success" />
           </div>
         </div>
       </div>

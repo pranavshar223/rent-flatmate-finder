@@ -25,6 +25,13 @@ class UserRepository {
       data: updateData,
     });
   }
+
+  static async updateLastSeen(id) {
+    return prisma.user.update({
+      where: { id },
+      data: { lastSeenAt: new Date() },
+    });
+  }
 }
 
 module.exports = UserRepository;

@@ -3,6 +3,7 @@ const { Server } = require('socket.io');
 const app = require('./app');
 const env = require('./config/env');
 const { setupChatSocket } = require('./modules/chat/chat.socket');
+const { setupInterestSocket } = require('./modules/interest/interest.socket');
 
 const PORT = env.PORT || 5000;
 
@@ -12,6 +13,7 @@ const io = new Server(server, {
 });
 
 setupChatSocket(io);
+setupInterestSocket(io);
 
 server.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT} in ${env.NODE_ENV} mode.`);

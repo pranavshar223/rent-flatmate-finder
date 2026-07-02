@@ -1,50 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { DashboardStatCard } from '../../../components/dashboard/DashboardStatCard';
 import { DashboardQuickActions } from '../components/DashboardQuickActions';
 import { RecentRooms } from '../components/RecentRooms';
 import { RecentRequests } from '../components/RecentRequests';
 import { roomApi } from '../../../api/room.api';
-import { interestApi } from '../../../api/interest.api';
+import { InterestRepository } from '../../../repositories/InterestRepository';
+import { useInterestRealtimeUpdates } from '../../interest/hooks/useInterestRealtimeUpdates';
+import { queryKeys } from '../../../constants/queryKeys';
 import type { Room } from '../../../types/room';
 import type { Interest } from '../../../types/interest';
 
 export const DashboardPage = () => {
-  const [stats, setStats] = useState<any>(null);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [requests, setRequests] = useState<Interest[]>([]);
-  const [loading, setLoading] = useState(true);
+  useInterestRealtimeUpdates();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [roomsRes, reqsRes] = await Promise.all([
-          roomApi.getOwnerRooms(),
-          interestApi.getOwnerRequests(),
-        ]);
-        
-        const myRooms = roomsRes.data || [];
-        const myRequests = reqsRes.data || [];
-        
-        setRooms(myRooms);
-        setRequests(myRequests.filter(r => r.status === 'pending'));
-        
-        // Calculate stats
-        setStats({
-          totalRooms: myRooms.length,
-          activeRooms: myRooms.filter(r => r.status === 'available').length,
-          pendingRequests: myRequests.filter(r => r.status === 'pending').length,
-        });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: queryKeys.ownerRooms,
+        queryFn: () => roomApi.getOwnerRooms()
+      },
+      {
+        queryKey: queryKeys.ownerRequests,
+        queryFn: () => InterestRepository.getOwnerRequests()
       }
-    };
-    fetchData();
-  }, []);
+    ]
+  });
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+  const [roomsQuery, requestsQuery] = results;
+  const isLoading = roomsQuery.isLoading || requestsQuery.isLoading;
+
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+
+  const rooms = roomsQuery.data?.data || [];
+  const requests = requestsQuery.data?.items || [];
+  const pendingRequests = requests.filter((r: Interest) => r.status === 'pending');
+
+  const stats = {
+    totalRooms: rooms.length,
+    activeRooms: rooms.filter((r: Room) => r.status === 'available').length,
+    pendingRequests: pendingRequests.length,
+  };
 
   return (
     <div className="space-y-8">
@@ -54,9 +50,9 @@ export const DashboardPage = () => {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <DashboardStatCard title="Total Rooms" value={stats?.totalRooms || 0} icon={<span className="text-xl">🏠</span>} />
-        <DashboardStatCard title="Active Listings" value={stats?.activeRooms || 0} icon={<span className="text-xl">✅</span>} color="text-success" />
-        <DashboardStatCard title="Pending Requests" value={stats?.pendingRequests || 0} icon={<span className="text-xl">⏳</span>} color="text-warning" />
+        <DashboardStatCard title="Total Rooms" value={stats.totalRooms} icon={<span className="text-xl">🏠</span>} />
+        <DashboardStatCard title="Active Listings" value={stats.activeRooms} icon={<span className="text-xl">✅</span>} color="text-success" />
+        <DashboardStatCard title="Pending Requests" value={stats.pendingRequests} icon={<span className="text-xl">⏳</span>} color="text-warning" />
         <DashboardStatCard title="Chats" value="2" icon={<span className="text-xl">💬</span>} color="text-primary" />
       </div>
 
@@ -81,7 +77,7 @@ export const DashboardPage = () => {
           <RecentRooms rooms={rooms} />
         </div>
         <div>
-          <RecentRequests requests={requests} />
+          <RecentRequests requests={pendingRequests} />
         </div>
       </div>
     </div>

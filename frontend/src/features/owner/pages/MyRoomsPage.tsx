@@ -46,7 +46,7 @@ export const MyRoomsPage = () => {
               <RoomCard
                 id={room.id}
                 title={room.title}
-                price={room.price}
+                price={room.rent || room.price || 0}
                 location={room.location}
                 imageUrl={room.images[0] || 'https://via.placeholder.com/400x300'}
                 status={room.status}

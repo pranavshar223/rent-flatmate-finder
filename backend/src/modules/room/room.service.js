@@ -84,15 +84,24 @@ class RoomService {
     return updatedRoom;
   }
 
-  static async markAsFilled(roomId, ownerId) {
+  static async toggleStatus(roomId, ownerId) {
     const room = await this.getRoomById(roomId);
     if (room.ownerId !== ownerId) {
-      throw new AuthorizationError('You can only mark your own rooms as filled.');
+      throw new AuthorizationError('You can only modify your own rooms.');
     }
 
-    const updatedRoom = await RoomRepository.markAsFilled(roomId);
-    console.info(`[INFO] Room Filled: ID ${roomId} by Owner ${ownerId}`);
-    eventEmitter.emit(EVENTS.ROOM_FILLED, { roomId, ownerId, timestamp: new Date().toISOString() });
+    const newStatus = !room.isFilled;
+    const updatedRoom = await RoomRepository.toggleStatus(roomId, newStatus);
+    
+    console.info(`[INFO] Room Status Toggled: ID ${roomId} isFilled=${newStatus} by Owner ${ownerId}`);
+    
+    // We can emit a generic ROOM_UPDATED event or keep ROOM_FILLED if newStatus is true
+    if (newStatus) {
+      eventEmitter.emit(EVENTS.ROOM_FILLED, { roomId, ownerId, timestamp: new Date().toISOString() });
+    } else {
+      eventEmitter.emit(EVENTS.ROOM_UPDATED, { roomId, ownerId, timestamp: new Date().toISOString() });
+    }
+    
     return updatedRoom;
   }
 

@@ -53,7 +53,7 @@ export const RoomForm = ({ mode, defaultValues, onSubmit, loading }: RoomFormPro
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="rent">Monthly Rent ($)</Label>
+              <Label htmlFor="rent">Monthly Rent (₹)</Label>
               <Input id="rent" type="number" {...form.register('rent')} placeholder="e.g., 1200" />
               {form.formState.errors.rent && <p className="text-sm text-danger">{form.formState.errors.rent.message}</p>}
             </div>
@@ -119,3 +119,4 @@ export const RoomForm = ({ mode, defaultValues, onSubmit, loading }: RoomFormPro
     </Card>
   );
 };
+

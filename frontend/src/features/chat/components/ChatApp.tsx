@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ChatService } from '../services/chat.service';
 import { ChatList } from './ChatList';
 import { ChatWindow } from './ChatWindow';
+import { useChats } from '../hooks/useChats';
+import { useRealtimeChat } from '../hooks/useRealtimeChat';
 
 interface ChatAppProps {
   currentUserId: string;
@@ -12,10 +12,8 @@ export const ChatApp = ({ currentUserId }: ChatAppProps) => {
   const [activeChatId, setActiveChatId] = useState<string | undefined>();
   const [isMobileListOpen, setIsMobileListOpen] = useState(true);
 
-  const { data: chats = [], isLoading } = useQuery({
-    queryKey: ['chats'],
-    queryFn: () => ChatService.getChatsForUser(currentUserId)
-  });
+  const { data: chats = [], isLoading } = useChats();
+  const { isUserOnline } = useRealtimeChat();
 
   const handleSelectChat = (chatId: string) => {
     setActiveChatId(chatId);
@@ -25,9 +23,16 @@ export const ChatApp = ({ currentUserId }: ChatAppProps) => {
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading chats...</div>;
 
   const activeChat = chats.find(c => c.id === activeChatId);
+  const recipientId = activeChat 
+    ? (currentUserId === activeChat.tenantId ? activeChat.ownerId : activeChat.tenantId)
+    : '';
   const recipientName = activeChat 
     ? (currentUserId === activeChat.tenantId ? activeChat.ownerName : activeChat.tenantName)
     : '';
+  const recipientAvatarUrl = activeChat
+    ? (currentUserId === activeChat.tenantId ? activeChat.ownerAvatarUrl : activeChat.tenantAvatarUrl)
+    : undefined;
+  const isRecipientOnline = isUserOnline(recipientId);
 
   return (
     <div className="flex h-[calc(100vh-140px)] bg-card border border-border rounded-xl shadow-sm overflow-hidden relative">
@@ -43,6 +48,7 @@ export const ChatApp = ({ currentUserId }: ChatAppProps) => {
             activeChatId={activeChatId} 
             onSelectChat={handleSelectChat}
             currentUserId={currentUserId}
+            isUserOnline={isUserOnline}
           />
         </div>
       </div>
@@ -64,7 +70,9 @@ export const ChatApp = ({ currentUserId }: ChatAppProps) => {
           <ChatWindow 
             chatId={activeChatId} 
             currentUserId={currentUserId} 
-            recipientName={recipientName} 
+            recipientName={recipientName}
+            recipientAvatarUrl={recipientAvatarUrl}
+            isOnline={isRecipientOnline}
           />
         ) : (
           <div className="h-full hidden md:flex flex-col items-center justify-center bg-muted/10 text-muted-foreground">

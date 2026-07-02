@@ -9,7 +9,10 @@ class InterestController {
   }
 
   static async getTenantRequests(req, res) {
-    const { status, page, limit } = req.query;
+    const { status } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
     const result = await InterestService.getTenantRequests(req.user.userId, { status }, { page, limit });
     return ApiResponse.success(res, 200, 'Requests retrieved.', {
       currentPage: page,
@@ -20,7 +23,10 @@ class InterestController {
   }
 
   static async getOwnerRequests(req, res) {
-    const { status, page, limit } = req.query;
+    const { status } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
     const result = await InterestService.getOwnerRequests(req.user.userId, { status }, { page, limit });
     return ApiResponse.success(res, 200, 'Requests retrieved.', {
       currentPage: page,

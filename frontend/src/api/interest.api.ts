@@ -1,15 +1,16 @@
-import { api } from './axios';
-import type { Interest } from '../types/interest';
+import { axiosInstance as api } from './axios';
+
+import type { InterestListResponse, InterestStatusResponse } from '../types/api/interest.dto';
 
 export const interestApi = {
   // Tenant
   createInterest: async (data: { roomId: string; message?: string }) => {
-    const response = await api.post<{ status: string; data: Interest }>('/interests', data);
+    const response = await api.post<InterestStatusResponse>('/interests', data);
     return response.data;
   },
 
   getTenantRequests: async () => {
-    const response = await api.get<{ status: string; data: Interest[] }>('/interests/me');
+    const response = await api.get<InterestListResponse>('/interests/me');
     return response.data;
   },
 
@@ -20,23 +21,23 @@ export const interestApi = {
 
   // Owner
   getOwnerRequests: async () => {
-    const response = await api.get<{ status: string; data: Interest[] }>('/interests/owner');
+    const response = await api.get<InterestListResponse>('/interests/owner');
     return response.data;
   },
 
   acceptRequest: async (id: string) => {
-    const response = await api.patch<{ status: string; data: Interest }>(`/interests/${id}/accept`);
+    const response = await api.patch<InterestStatusResponse>(`/interests/${id}/accept`);
     return response.data;
   },
 
   rejectRequest: async (id: string) => {
-    const response = await api.patch<{ status: string; data: Interest }>(`/interests/${id}/reject`);
+    const response = await api.patch<InterestStatusResponse>(`/interests/${id}/reject`);
     return response.data;
   },
 
   // Shared
   getRequestById: async (id: string) => {
-    const response = await api.get<{ status: string; data: Interest }>(`/interests/${id}`);
+    const response = await api.get<InterestStatusResponse>(`/interests/${id}`);
     return response.data;
   }
 };

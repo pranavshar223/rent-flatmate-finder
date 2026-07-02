@@ -23,8 +23,8 @@ class RoomController {
   }
 
   static async markAsFilled(req, res) {
-    const room = await RoomService.markAsFilled(req.params.id, req.user.userId);
-    return ApiResponse.success(res, 200, 'Room marked as filled', room);
+    const room = await RoomService.toggleStatus(req.params.id, req.user.userId);
+    return ApiResponse.success(res, 200, 'Room status toggled', room);
   }
 
   static async deleteRoom(req, res) {

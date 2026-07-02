@@ -124,7 +124,7 @@ export const DesignSystemPage = () => {
               />
               <DashboardStatCard 
                 title="Total Revenue"
-                value="$4,250"
+                value="₹4,250"
                 icon={<span className="text-xl">💵</span>}
                 color="text-success"
               />
@@ -201,3 +201,4 @@ export const DesignSystemPage = () => {
     </div>
   );
 };
+

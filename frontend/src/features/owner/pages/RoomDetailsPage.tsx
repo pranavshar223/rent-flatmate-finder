@@ -5,12 +5,14 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { InterestCard } from '../../../components/interest/InterestCard';
 import { roomApi } from '../../../api/room.api';
-import { interestApi } from '../../../api/interest.api';
+import { InterestRepository } from '../../../repositories/InterestRepository';
+import { useInterestRealtimeUpdates } from '../../interest/hooks/useInterestRealtimeUpdates';
 import type { Room } from '../../../types/room';
 import type { Interest } from '../../../types/interest';
 
 export const RoomDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
+  useInterestRealtimeUpdates();
   const navigate = useNavigate();
   const [room, setRoom] = useState<Room | null>(null);
   const [requests, setRequests] = useState<Interest[]>([]);
@@ -20,12 +22,13 @@ export const RoomDetailsPage = () => {
     if (id) {
       Promise.all([
         roomApi.getRoomById(id),
-        interestApi.getOwnerRequests()
+        InterestRepository.getOwnerRequests()
       ]).then(([roomRes, reqRes]) => {
         setRoom(roomRes.data);
         // Filter requests for this specific room
-        const myRequests = reqRes.data || [];
-        setRequests(myRequests.filter(r => r.roomId === id));
+        const requestsRes = (reqRes as any);
+        const myRequests = requestsRes?.items || [];
+        setRequests(myRequests.filter((r: any) => r.roomId === id));
       }).catch(console.error)
       .finally(() => setLoading(false));
     }
@@ -45,7 +48,7 @@ export const RoomDetailsPage = () => {
             <Button variant="destructive" onClick={async () => {
               if (confirm('Are you sure you want to delete this room?')) {
                 try {
-                  await roomApi.deleteRoom(id);
+                  await roomApi.deleteRoom(id!);
                   navigate('/owner/rooms');
                 } catch (e) { console.error(e); }
               }
@@ -57,7 +60,7 @@ export const RoomDetailsPage = () => {
       {/* Gallery */}
       <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden bg-muted">
         <img 
-          src={room.images[0] || 'https://via.placeholder.com/800x400'} 
+          src={(room.images?.[0] as any)?.imageUrl || room.images?.[0] || 'https://via.placeholder.com/1200x600'} 
           alt={room.title} 
           className="w-full h-full object-cover"
         />
@@ -84,11 +87,13 @@ export const RoomDetailsPage = () => {
         <div className="bg-card border border-border rounded-xl p-6 h-fit space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Monthly Rent</span>
-            <span className="text-2xl font-bold text-primary">${room.price}</span>
+            <span className="text-2xl font-bold text-primary">₹{room.rent || room.price || 0}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Status</span>
-            <Badge className={room.status === 'available' ? 'bg-success hover:bg-success' : ''}>{room.status}</Badge>
+            <Badge className={room.status === 'available' || room.isFilled === false ? 'bg-success hover:bg-success' : ''}>
+              {room.status || (room.isFilled ? 'Rented' : 'Available')}
+            </Badge>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Available From</span>
@@ -98,12 +103,14 @@ export const RoomDetailsPage = () => {
             className="w-full bg-primary text-primary-foreground mt-4 hover:bg-primary/90"
             onClick={async () => {
               try {
-                await roomApi.markAsFilled(id);
-                setRoom({ ...room, status: 'rented' } as any);
+                // This calls the same endpoint but backend now toggles the status
+                const res = await roomApi.markAsFilled(id!);
+                // The backend returns the updated room, use it to set the state
+                setRoom(res.data);
               } catch (e) { console.error(e); }
             }}
           >
-            Mark as Rented
+            {room.isFilled ? 'Mark as Available' : 'Mark as Rented'}
           </Button>
         </div>
       </div>
@@ -130,3 +137,5 @@ export const RoomDetailsPage = () => {
     </div>
   );
 };
+
+

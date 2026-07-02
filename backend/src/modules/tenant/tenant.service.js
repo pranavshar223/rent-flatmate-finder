@@ -55,8 +55,12 @@ class TenantService {
   static async getAvailableRooms(userId, filters, queryParams) {
     const { page, limit, sort } = queryParams;
 
+    // Optional development flag to allow owners to see their own rooms
+    const showOwnRooms = process.env.SHOW_OWN_ROOMS_IN_DEV === 'true';
+    const effectiveFilters = showOwnRooms ? filters : { ...filters, excludeOwnerId: userId };
+
     const { totalItems, items } = await TenantRepository.findAvailableRooms(
-      { ...filters, excludeOwnerId: userId },
+      effectiveFilters,
       { page, limit },
       { sort }
     );

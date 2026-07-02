@@ -4,7 +4,9 @@ import { NoRequests } from '../../../components/feedback/EmptyStates';
 import { Input } from '../../../components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
-import { InterestService } from '../../interest/services/interest.service';
+import { InterestRepository } from '../../../repositories/InterestRepository';
+import { useInterestRealtimeUpdates } from '../../interest/hooks/useInterestRealtimeUpdates';
+import { queryKeys } from '../../../constants/queryKeys';
 import { useAcceptInterest, useRejectInterest } from '../../interest/hooks/useInterestMutations';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
@@ -13,10 +15,14 @@ export const RequestsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const { data: requests = [], isLoading: loading } = useQuery({
-    queryKey: ['owner-requests'],
-    queryFn: () => InterestService.getOwnerRequests('owner2')
+  useInterestRealtimeUpdates();
+
+  const { data: requestsResponse, isLoading: loading } = useQuery({
+    queryKey: queryKeys.ownerRequests,
+    queryFn: () => InterestRepository.getOwnerRequests()
   });
+
+  const requests = requestsResponse?.items || [];
 
   const acceptMutation = useAcceptInterest();
   const rejectMutation = useRejectInterest();
