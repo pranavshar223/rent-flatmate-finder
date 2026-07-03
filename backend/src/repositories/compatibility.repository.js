@@ -7,6 +7,12 @@ class CompatibilityRepository {
     });
   }
 
+  static async findAllByTenant(tenantId) {
+    return prisma.compatibilityScore.findMany({
+      where: { tenantId },
+    });
+  }
+
   static async saveScore(data) {
     return prisma.compatibilityScore.create({ data });
   }

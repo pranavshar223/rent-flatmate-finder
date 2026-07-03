@@ -93,7 +93,7 @@ export const RoomForm = ({ mode, defaultValues, onSubmit, loading }: RoomFormPro
 
           <div className="space-y-2">
             <Label htmlFor="images">Images</Label>
-            <Input id="images" type="file" multiple accept="image/*" />
+            <Input id="images" type="file" multiple accept="image/*" required={mode === 'create'} />
             <p className="text-xs text-muted-foreground">You can select multiple images. Maximum 10.</p>
           </div>
 

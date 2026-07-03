@@ -58,6 +58,7 @@ model User {
   compatibilityScores CompatibilityScore[]
   interestRequests    InterestRequest[]
   adminAudits         AdminAudit[]
+  notificationLogs    NotificationLog[]
 }
 
 model Room {
@@ -127,6 +128,7 @@ model InterestRequest {
   tenantId String
   roomId   String
   status   RequestStatus @default(PENDING)
+  isHighMatch Boolean    @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -172,4 +174,23 @@ model AdminAudit {
   createdAt  DateTime @default(now())
 
   admin User @relation(fields: [adminId], references: [id])
+}
+
+model NotificationLog {
+  id             String    @id @default(uuid())
+  recipientId    String
+  eventType      String    // e.g., 'WELCOME_EMAIL', 'HIGH_MATCH_INTEREST'
+  channel        String    // e.g., 'EMAIL', 'PUSH'
+  status         String    // e.g., 'PENDING', 'SENT', 'FAILED'
+  subject        String?
+  recipientEmail String?
+  sentAt         DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  metadata       Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipient User @relation(fields: [recipientId], references: [id])
 }

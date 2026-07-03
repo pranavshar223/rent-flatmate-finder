@@ -10,6 +10,8 @@ import { queryKeys } from '../../../constants/queryKeys';
 import { toast } from 'sonner';
 import { useInterestRealtimeUpdates } from '../../interest/hooks/useInterestRealtimeUpdates';
 
+import { RoomAIChatWidget } from '../../../components/compatibility/RoomAIChatWidget';
+
 export const RoomDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -162,8 +164,6 @@ export const RoomDetailsPage = () => {
             <CompatibilityCard 
               score={compatibility.score}
               explanation={compatibility.explanation}
-              breakdown={compatibility.breakdown}
-              confidence={compatibility.confidence}
             />
           ) : (
             <div className="p-6 bg-card border border-border rounded-xl text-center">
@@ -192,6 +192,7 @@ export const RoomDetailsPage = () => {
 
         </div>
       </div>
+      {id && <RoomAIChatWidget roomId={id} />}
     </div>
   );
 };

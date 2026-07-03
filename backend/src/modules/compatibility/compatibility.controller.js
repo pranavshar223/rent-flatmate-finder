@@ -15,6 +15,25 @@ class CompatibilityController {
     return ApiResponse.success(res, 200, 'Compatibility retrieved successfully', compatibility);
   }
 
+  static async getTenantCompatibilities(req, res) {
+    const tenantId = req.user.userId;
+    const compatibilities = await CompatibilityService.getTenantCompatibilities(tenantId);
+    return ApiResponse.success(res, 200, 'Compatibilities retrieved successfully', compatibilities);
+  }
+
+  static async askQuestion(req, res) {
+    const { roomId } = req.params;
+    const { question } = req.body;
+    const tenantId = req.user.userId;
+
+    if (!question) {
+      return ApiResponse.error(res, 400, 'BAD_REQUEST', 'Question is required.');
+    }
+
+    const answer = await CompatibilityService.askQuestion(tenantId, roomId, question);
+    return ApiResponse.success(res, 200, 'Question answered successfully', { answer });
+  }
+
   static async recalculate(req, res) {
     // Admin/internal endpoint trigger for manual recalculation
     const { tenantId, roomId } = req.body;
