@@ -4,6 +4,8 @@ const UserRepository = require('../../repositories/user.repository');
 const { AuthenticationError } = require('../../shared/errors');
 const env = require('../../config/env');
 const bcrypt = require('bcrypt');
+const eventEmitter = require('../../shared/events/eventEmitter');
+const { EVENTS } = require('../../shared/events/events.constants');
 
 class AuthService {
   /**
@@ -87,7 +89,10 @@ class AuthService {
       password: hashedPassword,
     });
 
-    // 4. Generate custom JWT
+    // 4. Trigger notifications
+    eventEmitter.emit(EVENTS.USER_REGISTERED, { userId: newUser.id });
+
+    // 5. Generate custom JWT
     const token = this.generateJwt(newUser);
     return { user: newUser, token };
   }
