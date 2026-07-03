@@ -210,13 +210,6 @@ The application is fully configured for cloud deployment.
   * **Start Command:** `npm start`
   * Create a managed PostgreSQL database on Render and inject the `DATABASE_URL` into your Web Service environment variables.
 
-## Future Enhancements
-
-- [ ] **Payments Integration:** Integrate Razorpay or Stripe for booking advances and rent payments.
-- [ ] **Video Calling:** In-app video tours for rooms via WebRTC.
-- [ ] **Identity Verification:** KYC document upload and automated verification for enhanced security.
-- [ ] **Map View:** Interactive map using Mapbox to visualize room locations.
-
 ## Author
 
 **Pranav Sharma**
