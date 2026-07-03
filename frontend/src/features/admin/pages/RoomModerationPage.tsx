@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useAdminRooms } from '../hooks/useAdminQueries';
 import { useHideRoom, useRestoreRoom } from '../hooks/useAdminMutations';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -52,7 +52,7 @@ export const RoomModerationPage = () => {
                 {filteredRooms.map((room: any) => (
                   <tr key={room.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3">
-                      <img src={room.images[0]} alt="room" className="w-12 h-12 object-cover rounded-md" />
+                      <img src={(room.images?.[0] as any)?.imageUrl || room.images?.[0] || 'https://via.placeholder.com/400x300'} alt="room" className="w-12 h-12 object-cover rounded-md" />
                     </td>
                     <td className="px-4 py-3 font-medium">{room.title}</td>
                     <td className="px-4 py-3">{room.location}</td>

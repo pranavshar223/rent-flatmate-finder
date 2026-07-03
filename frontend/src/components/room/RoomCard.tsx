@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardFooter } from '../ui/card';
+import { Card, CardContent, CardFooter } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
@@ -65,7 +65,6 @@ export const RoomCard = ({
             <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
               {compatibility.score}% Match
             </Badge>
-            <span className="text-xs font-medium text-success">{compatibility.label}</span>
           </div>
         )}
       </CardContent>

@@ -11,9 +11,22 @@ const env = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+  
+  // Notification System
+  EMAIL_ENABLED: process.env.EMAIL_ENABLED === 'true',
+  EMAIL_RETRY_COUNT: parseInt(process.env.EMAIL_RETRY_COUNT || '3', 10),
+  EMAIL_TIMEOUT: parseInt(process.env.EMAIL_TIMEOUT || '10000', 10),
+  EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'nodemailer',
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM || 'no-reply@rentflatmate.com',
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.ethereal.email',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
+  
+  COMPATIBILITY_THRESHOLD: parseInt(process.env.COMPATIBILITY_THRESHOLD || '80', 10),
+  LLM_TIMEOUT: parseInt(process.env.LLM_TIMEOUT || '10000', 10),
 };
 
 // Fail fast on critical environment variables

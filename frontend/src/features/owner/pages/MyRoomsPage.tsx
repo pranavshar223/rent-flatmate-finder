@@ -48,7 +48,7 @@ export const MyRoomsPage = () => {
                 title={room.title}
                 price={room.rent || room.price || 0}
                 location={room.location}
-                imageUrl={room.images[0] || 'https://via.placeholder.com/400x300'}
+                imageUrl={(room.images?.[0] as any)?.imageUrl || room.images?.[0] || 'https://via.placeholder.com/400x300'}
                 status={room.status}
                 onClick={(id) => navigate(`/owner/rooms/${id}`)}
               />

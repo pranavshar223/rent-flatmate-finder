@@ -33,21 +33,16 @@ export const RecommendedRooms = ({ rooms }: { rooms: any[] }) => {
                 title={room.title}
                 price={room.rent || room.price || 0}
                 location={room.location}
-                imageUrl={room.images[0] || 'https://via.placeholder.com/400x300'}
+                imageUrl={(room.images?.[0] as any)?.imageUrl || room.images?.[0] || 'https://via.placeholder.com/400x300'}
                 status={room.status}
                 compatibility={room.compatibility}
                 onClick={(id) => navigate(`/tenant/rooms/${id}`)}
               />
               
-              {room.compatibility?.breakdown && (
+              {room.compatibility?.label && (
                 <div className="p-4 pt-0 border-t border-border mt-auto">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Because:</p>
-                  <ul className="space-y-1">
-                    {room.compatibility.breakdown.budget && <li className="text-sm text-foreground flex items-center gap-2"><span className="text-success">✔</span> Budget Match</li>}
-                    {room.compatibility.breakdown.location && <li className="text-sm text-foreground flex items-center gap-2"><span className="text-success">✔</span> Near Preferred Area</li>}
-                    {room.compatibility.breakdown.moveIn && <li className="text-sm text-foreground flex items-center gap-2"><span className="text-success">✔</span> Move-in Date Matches</li>}
-                    {room.compatibility.breakdown.lifestyle && <li className="text-sm text-foreground flex items-center gap-2"><span className="text-success">✔</span> Lifestyle Alignment</li>}
-                  </ul>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">AI Explanation:</p>
+                  <p className="text-sm text-foreground">{room.compatibility.label}</p>
                 </div>
               )}
             </div>

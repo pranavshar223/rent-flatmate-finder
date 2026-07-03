@@ -11,7 +11,9 @@ const router = express.Router();
 router.use(requireAuth);
 
 // Tenant endpoint to get cached score
+router.get('/bulk/tenant', requireRole('TENANT'), catchAsync(CompatibilityController.getTenantCompatibilities));
 router.get('/:roomId', requireRole('TENANT'), validate(roomIdParamSchema), catchAsync(CompatibilityController.getRoomCompatibility));
+router.post('/:roomId/ask', requireRole('TENANT'), validate(roomIdParamSchema), catchAsync(CompatibilityController.askQuestion));
 
 // Admin endpoint to manually trigger recalculation
 router.post('/recalculate', requireRole('ADMIN'), validate(recalculateSchema), catchAsync(CompatibilityController.recalculate));

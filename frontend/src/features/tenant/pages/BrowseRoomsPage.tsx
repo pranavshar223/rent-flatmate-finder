@@ -9,6 +9,7 @@ import { Input } from '../../../components/ui/input';
 import { tenantApi } from '../../../api/tenant.api';
 import { queryKeys } from '../../../constants/queryKeys';
 import { mapFiltersToBackend } from '../../../mappers/tenant.mapper';
+import { compatibilityRepository } from '../../../repositories/CompatibilityRepository';
 
 export const BrowseRoomsPage = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export const BrowseRoomsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Let Axios serialize the mapped backend params
-  const { data: roomsResponse, isLoading, isError } = useQuery({
+  const { data: roomsResponse, isLoading: isLoadingRooms, isError: isErrorRooms } = useQuery({
     queryKey: [...queryKeys.rooms, uiFilters, searchQuery],
     queryFn: () => tenantApi.browseRooms({
       ...mapFiltersToBackend(uiFilters),
@@ -24,10 +25,33 @@ export const BrowseRoomsPage = () => {
     })
   });
 
-  const rooms = roomsResponse?.data?.items || [];
+  const { data: compatibilities = [] } = useQuery({
+    queryKey: ['tenant', 'compatibilities'],
+    queryFn: () => compatibilityRepository.getTenantCompatibilities(),
+  });
+
+  const rawRooms = roomsResponse?.data?.items || [];
   
-  // For recommendations, we can use top 2 compatible rooms from the results.
-  const recommendedRooms = rooms.slice(0, 2);
+  // Smart Sorting: Map compatibility and sort
+  const rooms = [...rawRooms].map(room => {
+    const comp = compatibilities.find(c => c.roomId === room.id);
+    return {
+      ...room,
+      compatibility: comp ? { score: comp.score, label: comp.explanation } : undefined
+    };
+  }).sort((a, b) => {
+    const scoreA = a.compatibility?.score || 0;
+    const scoreB = b.compatibility?.score || 0;
+    if (scoreA !== scoreB) return scoreB - scoreA;
+    // Fallback to newest
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  // For recommendations, we use top 2 compatible rooms from the results that have a score.
+  const recommendedRooms = rooms.filter(r => r.compatibility).slice(0, 2);
+
+  const isLoading = isLoadingRooms;
+  const isError = isErrorRooms;
 
   return (
     <div className="space-y-8">
@@ -88,7 +112,7 @@ export const BrowseRoomsPage = () => {
                       title={room.title}
                       price={room.rent || room.price}
                       location={room.location}
-                      imageUrl={room.images?.[0] || 'https://via.placeholder.com/400x300'}
+                      imageUrl={(room.images?.[0] as any)?.imageUrl || room.images?.[0] || 'https://via.placeholder.com/400x300'}
                       status={room.status}
                       compatibility={room.compatibility}
                       onClick={(id) => navigate(`/tenant/rooms/${id}`)}

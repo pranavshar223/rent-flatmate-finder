@@ -4,6 +4,8 @@ const { EVENTS } = require('../../shared/events/events.constants');
 const eventEmitter = require('../../shared/events/eventEmitter');
 const { NotFoundError, ConflictError, AuthorizationError, ValidationError } = require('../../shared/errors');
 const prisma = require('../../config/prisma');
+const env = require('../../config/env');
+const CompatibilityService = require('../compatibility/compatibility.service');
 
 class InterestService {
   static async createInterest(tenantId, roomId) {
@@ -19,8 +21,16 @@ class InterestService {
     const hasPending = await InterestRepository.existsPendingRequest(tenantId, roomId);
     if (hasPending) throw new ConflictError('You already have a pending request for this room.');
 
-    // 3. Create request
-    const request = await InterestRepository.createInterest({ tenantId, roomId });
+    // 3. Check for high compatibility match
+    const compatibility = await CompatibilityService.getRoomCompatibility(tenantId, roomId);
+    let isHighMatch = false;
+    if (compatibility && compatibility.score >= env.COMPATIBILITY_THRESHOLD) {
+      isHighMatch = true;
+      console.info(`[INFO] High Match Detected: Score ${compatibility.score} >= ${env.COMPATIBILITY_THRESHOLD}`);
+    }
+
+    // 4. Create request
+    const request = await InterestRepository.createInterest({ tenantId, roomId, isHighMatch });
 
     console.info(`[INFO] Interest Created: Request ${request.id} | Tenant ${tenantId} | Room ${roomId} | Duration ${Date.now() - startTime}ms`);
     eventEmitter.emit(EVENTS.INTEREST_CREATED, { 

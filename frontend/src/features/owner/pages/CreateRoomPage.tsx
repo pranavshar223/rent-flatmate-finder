@@ -3,6 +3,7 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { RoomForm } from '../components/RoomForm';
 import { roomApi } from '../../../api/room.api';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export const CreateRoomPage = () => {
   const navigate = useNavigate();
@@ -24,9 +25,11 @@ export const CreateRoomPage = () => {
       }
 
       await roomApi.createRoom(formData);
+      toast.success("Room created successfully!");
       navigate('/owner/rooms');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Failed to create room');
     } finally {
       setLoading(false);
     }
