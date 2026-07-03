@@ -222,6 +222,3 @@ The application is fully configured for cloud deployment.
 **Pranav Sharma**
 - GitHub: [@pranavshar223](https://github.com/pranavshar223)
 
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
