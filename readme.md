@@ -60,6 +60,7 @@ Finding the right flatmate or renting out a room can be a daunting task. **Rent 
 - 💬 **Real-Time Chat:** Built-in instant messaging using WebSockets (Socket.io) allowing users to negotiate and connect seamlessly.
 - 🖼️ **Cloud Image Storage:** Secure and fast image uploading for room listings using Cloudinary.
 - 🔍 **Advanced Filtering:** Tenants can search and filter rooms based on location, budget, and specific amenities.
+- 📧 **Automated Emails:** Sending personalized transactional emails like welcome messages and match notifications using Nodemailer/Brevo.
 
 ## Tech Stack
 
