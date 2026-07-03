@@ -9,7 +9,7 @@ const validate = (schema) => (req, res, next) => {
     });
     next();
   } catch (err) {
-    const errorDetails = err.errors.map((e) => ({
+    const errorDetails = (err.issues || []).map((e) => ({
       field: e.path.join('.'),
       message: e.message,
     }));
