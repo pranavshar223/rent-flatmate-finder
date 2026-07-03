@@ -108,7 +108,6 @@ export const DesignSystemPage = () => {
             <CompatibilityCard 
               score={92}
               explanation="You both value quiet evenings, cleanliness, and have perfectly aligned budgets."
-              breakdown={{ budget: true, location: true, moveIn: true, roomType: false, habits: true }}
             />
           </div>
 
