@@ -10,9 +10,10 @@ interface InterestCardProps {
   onAccept?: () => void;
   onReject?: () => void;
   onChat?: () => void;
+  disabled?: boolean;
 }
 
-export const InterestCard = ({ tenantName, matchScore, message, status, onAccept, onReject, onChat }: InterestCardProps) => {
+export const InterestCard = ({ tenantName, matchScore, message, status, onAccept, onReject, onChat, disabled }: InterestCardProps) => {
   return (
     <Card className="border-border">
       <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -37,10 +38,10 @@ export const InterestCard = ({ tenantName, matchScore, message, status, onAccept
         <div className="flex items-center gap-2 w-full md:w-auto mt-4 md:mt-0">
           {status === 'pending' && (
             <>
-              <Button onClick={onReject} variant="outline" className="flex-1 md:flex-none border-danger text-danger hover:bg-danger/10">
+              <Button onClick={onReject} disabled={disabled} variant="outline" className="flex-1 md:flex-none border-danger text-danger hover:bg-danger/10">
                 Decline
               </Button>
-              <Button onClick={onAccept} className="flex-1 md:flex-none bg-success hover:bg-success/90 text-white">
+              <Button onClick={onAccept} disabled={disabled} className="flex-1 md:flex-none bg-success hover:bg-success/90 text-white">
                 Accept
               </Button>
             </>
