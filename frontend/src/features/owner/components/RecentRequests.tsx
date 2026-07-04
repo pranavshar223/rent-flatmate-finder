@@ -1,9 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { InterestCard } from '../../../components/interest/InterestCard';
 import type { Interest } from '../../../types/interest';
+import { useAcceptInterest, useRejectInterest } from '../../interest/hooks/useInterestMutations';
 
 export const RecentRequests = ({ requests }: { requests: Interest[] }) => {
   const navigate = useNavigate();
+  const acceptMutation = useAcceptInterest();
+  const rejectMutation = useRejectInterest();
+  
+  const isPending = acceptMutation.isPending || rejectMutation.isPending;
 
   return (
     <div className="space-y-4">
@@ -30,8 +35,13 @@ export const RecentRequests = ({ requests }: { requests: Interest[] }) => {
               matchScore={90} // Mock score
               message={req.message}
               status={req.status}
-              onAccept={() => console.log('Accept', req.id)}
-              onReject={() => console.log('Reject', req.id)}
+              onAccept={() => {
+                if (window.confirm("Accept Request?\nThis will unlock chat between you and the tenant.")) {
+                  acceptMutation.mutate(req.id);
+                }
+              }}
+              onReject={() => rejectMutation.mutate(req.id)}
+              disabled={isPending}
             />
           ))}
         </div>
