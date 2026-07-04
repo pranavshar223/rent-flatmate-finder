@@ -32,7 +32,7 @@ export const RecentRequests = ({ requests }: { requests: Interest[] }) => {
             <InterestCard
               key={req.id}
               tenantName={`${req.tenant?.firstName} ${req.tenant?.lastName}`}
-              matchScore={90} // Mock score
+              matchScore={req.tenantCompatibility ?? 0}
               message={req.message}
               status={req.status}
               onAccept={() => {

@@ -66,7 +66,7 @@ export const RequestsPage = () => {
               <h3 className="font-bold text-lg mb-1">{req.room?.title || 'Room Details Unavailable'}</h3>
               <p className="text-sm text-muted-foreground mb-3">You said: "{req.message}"</p>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded-md">Score: {req.room?.compatibility?.score || 85}%</span>
+                <span className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded-md">Score: {req.room?.compatibility?.score ?? 0}%</span>
                 <span className="text-xs text-muted-foreground">Sent {new Date(req.createdAt).toLocaleDateString()}</span>
               </div>
             </div>

@@ -126,7 +126,7 @@ export const RoomDetailsPage = () => {
               <InterestCard 
                 key={req.id}
                 tenantName={`${req.tenant?.firstName} ${req.tenant?.lastName}`}
-                matchScore={85}
+                matchScore={req.tenantCompatibility ?? 0}
                 status={req.status}
                 message={req.message}
               />

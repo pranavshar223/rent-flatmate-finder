@@ -74,7 +74,7 @@ export const DashboardPage = () => {
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-bold text-primary">₹{recommendedRooms[0].price || (recommendedRooms[0] as any).rent}</span>
                 <span className="px-3 py-1 bg-success/20 text-success rounded-full font-bold text-sm">
-                  {(recommendedRooms[0] as any).compatibility?.score || 85}% Match
+                  {(recommendedRooms[0] as any).compatibility?.score ?? 0}% Match
                 </span>
               </div>
             </div>
@@ -115,7 +115,7 @@ export const DashboardPage = () => {
                 <InterestCard 
                   key={req.id}
                   tenantName={req.room?.title || 'Unknown Room'}
-                  matchScore={req.room?.compatibility?.score || 0}
+                  matchScore={req.room?.compatibility?.score ?? 0}
                   status={req.status}
                   message={`Sent to owner for ${req.room?.location || 'a room'}`}
                 />
