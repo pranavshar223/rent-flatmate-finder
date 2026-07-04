@@ -123,6 +123,28 @@ class RoomService {
 
     // Database Transaction to delete images then room
     await prisma.$transaction(async (tx) => {
+      // Find all interest requests for this room
+      const requests = await tx.interestRequest.findMany({ where: { roomId }, select: { id: true } });
+      const requestIds = requests.map(r => r.id);
+
+      if (requestIds.length > 0) {
+        // Find all chats for these requests
+        const chats = await tx.chat.findMany({ where: { interestRequestId: { in: requestIds } }, select: { id: true } });
+        const chatIds = chats.map(c => c.id);
+
+        if (chatIds.length > 0) {
+          // Delete messages first, then chats
+          await tx.message.deleteMany({ where: { chatId: { in: chatIds } } });
+          await tx.chat.deleteMany({ where: { id: { in: chatIds } } });
+        }
+        // Delete interest requests
+        await tx.interestRequest.deleteMany({ where: { id: { in: requestIds } } });
+      }
+
+      // Delete compatibility scores
+      await tx.compatibilityScore.deleteMany({ where: { roomId } });
+      
+      // Delete images and room
       await tx.roomImage.deleteMany({ where: { roomId } });
       await tx.room.delete({ where: { id: roomId } });
     });
