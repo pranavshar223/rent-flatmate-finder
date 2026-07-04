@@ -42,9 +42,7 @@
     </li>
     <li><a href="#api-overview">API Overview</a></li>
     <li><a href="#deployment">Deployment</a></li>
-    <li><a href="#future-enhancements">Future Enhancements</a></li>
     <li><a href="#author">Author</a></li>
-    <li><a href="#license">License</a></li>
   </ol>
 </details>
 
