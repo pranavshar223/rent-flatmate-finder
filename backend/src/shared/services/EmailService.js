@@ -68,7 +68,7 @@ class EmailService {
         ...data,
         subject,
         currentYear: new Date().getFullYear(),
-        platformUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+        platformUrl: env.FRONTEND_URL,
       };
 
       const template = this._getCompiledTemplate(templateName);

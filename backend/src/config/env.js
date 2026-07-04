@@ -12,6 +12,7 @@ const env = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   GROQ_API_KEY: process.env.GROQ_API_KEY,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://rent-flatmate-finder-ni45-six.vercel.app',
   
   // Notification System
   EMAIL_ENABLED: process.env.EMAIL_ENABLED === 'true',
